@@ -136,8 +136,35 @@ def init_tiny_unet(in_ch: int = 1, hidden: int = 16, time_dim: int = 16, seed: i
         "conv_out_b": conv_out_b,
     }
 
-# Step 11 - tiny_unet_forward (not yet solved)
-# TODO: implement
+# Step 11 - tiny_unet_forward
+import torch
+import torch.nn.functional as F
+
+def tiny_unet_forward(x, t, params: dict):
+    # x (32, 1, 28, 28)
+    h = F.conv2d(x, params["conv_in_w"], params["conv_in_b"], padding=1)
+    # (32, 16, 28, 28)
+    time_dim = params["time_mlp_w"].shape[1]
+    temb = timestep_embedding(t, time_dim)
+    # (B, 32), 32 dimensions for position
+
+    temb = F.relu(
+        F.linear(temb, params["time_mlp_w"], params["time_mlp_b"])
+        )
+    # time_mlp_w (16, 32)
+    # time_mlp_b (16,)
+    #temb (B:, 16)
+
+    h += temb[:, :, None, None] 
+    h = F.relu(h)
+
+    h = F.relu(
+        F.conv2d(
+            h, params["conv_mid_w"], params["conv_mid_b"], padding=1
+        )
+    )
+    
+    return F.conv2d(h, params["conv_out_w"], params["conv_out_b"], padding=1)
 
 # Step 12 - make_blob_dataset (not yet solved)
 # TODO: implement
