@@ -37,8 +37,14 @@ import torch.nn.functional as F
 def extract_into_batch(a, t, x):
     return a[t].reshape(-1, 1, 1, 1)
 
-# Step 5 - q_sample (not yet solved)
-# TODO: implement
+# Step 5 - q_sample
+import torch
+import torch.nn.functional as F
+
+def q_sample(x0, t, noise, alphas_cumprod):
+    t #represent each image's timestamp 
+    alpha_bar = extract_into_batch(alphas_cumprod, t, x0)
+    return torch.sqrt(alpha_bar) * x0 + torch.sqrt(1 - alpha_bar) * noise
 
 # Step 6 - build_diffusion_schedule (not yet solved)
 # TODO: implement
