@@ -351,8 +351,25 @@ def ddpm_sample_loop(params: dict, schedule: dict, shape: tuple, seed: int = 0):
 
     return x
 
-# Step 19 - sample_quality_mse (not yet solved)
-# TODO: implement
+# Step 19 - sample_quality_mse
+import torch
+import torch.nn.functional as F
+
+def sample_quality_mse(samples, dataset) -> float:
+    # mean over samples of min MSE to any dataset image
+    res = []
+
+    # for each sample, find the corresponding image with the minimum MSE
+    for sample in samples:
+        errors = [
+            F.mse_loss(sample, image)
+            for image in dataset
+        ]
+
+        min_error = torch.min(torch.stack(errors))
+        res.append(min_error)
+    
+    return torch.stack(res).mean().item()
 
 # Step 20 - ddpm_experiment (not yet solved)
 # TODO: implement
