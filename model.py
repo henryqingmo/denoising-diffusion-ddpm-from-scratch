@@ -345,7 +345,7 @@ def ddpm_sample_loop(params: dict, schedule: dict, shape: tuple, seed: int = 0):
     B = shape[0]
 
     for t in range(T-1, -1, -1):
-        # All images starts at the same timestamp 
+        # All images shares the same timestamp 
         t_batch = torch.full((B,), t, dtype=torch.long)
         x = ddpm_p_sample(x, t_batch, params, schedule)
 
