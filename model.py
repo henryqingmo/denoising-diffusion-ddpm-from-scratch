@@ -371,6 +371,55 @@ def sample_quality_mse(samples, dataset) -> float:
     
     return torch.stack(res).mean().item()
 
-# Step 20 - ddpm_experiment (not yet solved)
-# TODO: implement
+# Step 20 - ddpm_experiment
+import torch
+import torch.nn.functional as F
+
+def ddpm_experiment(n_data: int = 64, size: int = 8, T: int = 20, hidden: int = 16, num_steps: int = 40, batch_size: int = 16, lr: float = 5e-2, n_samples: int = 8, seed: int = 0) -> dict:
+    # data -> train -> sample -> metrics
+
+    # 1. Create training images
+    dataset = make_blob_dataset(n_data, size, seed)
+
+    # 2. Create diffusion schedule
+    schedule = build_diffusion_schedule(T)
+
+    # 3. Initialize neural network
+    params = init_tiny_unet(
+        1, hidden, time_dim=hidden, seed=seed
+    )
+
+    # 4. Train DDPM
+    params, history = train_ddpm(
+        dataset, params, schedule,
+        num_steps=num_steps,
+        batch_size=batch_size,
+        lr=lr,
+        seed=seed
+    )
+
+    # 5. Generate images using trained parameters
+    shape = (n_samples, 1, size, size)
+
+    samples = ddpm_sample_loop(
+        params, schedule, shape, seed=seed + 1
+    )
+
+    # 6. Generate random noise as a baseline
+    torch.manual_seed(seed + 2)
+    noise_samples = torch.randn(shape)
+
+    # 7. Evaluate both sets of images
+    sample_mse = sample_quality_mse(samples, dataset)
+    noise_mse = sample_quality_mse(noise_samples, dataset)
+
+    improvement = noise_mse - sample_mse
+
+    return {
+        "train_losses": history,
+        "final_loss": float(history[-1]),
+        "sample_mse": sample_mse,
+        "noise_mse": noise_mse,
+        "improvement": improvement
+    }
 
